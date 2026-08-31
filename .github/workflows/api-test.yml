@@ -60,6 +60,19 @@ jobs:
       - name: 의존성 설치
         run: npm ci
 
+      - name: 환경 점검 (local 이 아니면 시크릿 필요)
+        if: ${{ inputs.environment != 'local' }}
+        env:
+          BASE_URL: ${{ vars.BASE_URL }}
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        run: |
+          if [ -z "$BASE_URL" ] || [ -z "$ACCESS_TOKEN" ]; then
+            echo "::error::'${{ inputs.environment }}' 환경에는 BASE_URL 변수와 ACCESS_TOKEN 시크릿이 필요합니다."
+            echo "::error::레포 Settings → Environments → '${{ inputs.environment }}' 에서 설정한 뒤 다시 실행하세요."
+            echo "::error::포트폴리오 용도라면 environment=local 로 실행하면 됩니다 (목 서버, 설정 불필요)."
+            exit 1
+          fi
+
       - name: 목 서버 기동 (local 환경만)
         if: ${{ inputs.environment == 'local' }}
         run: |
