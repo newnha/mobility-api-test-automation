@@ -57,6 +57,7 @@
 | 카셰어링 | `PUT /test-fixtures/vehicles/:id` | `door_state=OPEN` | 200 · 응답 스키마 · 값 반영 |
 | 카셰어링 | `PUT /test-fixtures/vehicles/:id` | `power_state=ON` | 200 · 값 반영 |
 | 카셰어링 | `PUT /test-fixtures/vehicles/:id` | `charge_percent=15` | 200 · 경계값 정확히 반영 |
+| 카셰어링 | `GET /test-fixtures/vehicles/:id/status` | – | 200 · 위/경도 좌표 · 문/시동 상태 유효 |
 | 비대면 | `PUT /test-fixtures/vehicles/:id` | `lock_state=UNLOCKED` | 200 · 값 반영 |
 | 비대면 | `PUT /test-fixtures/vehicles/:id` | `charge_percent=150` | 422 (범위 초과 거부) |
 | 공통 | `GET /test-fixtures/vehicles/:id` | – | 200 · 필수 필드 · id 일치 |

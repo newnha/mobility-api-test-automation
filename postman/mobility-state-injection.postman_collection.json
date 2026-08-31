@@ -108,6 +108,41 @@
               }
             }
           ]
+        },
+        {
+          "name": "차량 상태 정보 조회 (GET)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/test-fixtures/vehicles/{{vehicle_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["test-fixtures", "vehicles", "{{vehicle_id}}", "status"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.test('상태코드 200', () => pm.response.to.have.status(200));",
+                  "pm.test('요청한 차량과 일치', () => {",
+                  "  pm.expect(body.vehicle_id).to.eql(pm.variables.get('vehicle_id'));",
+                  "});",
+                  "pm.test('위/경도 좌표가 숫자로 내려옴', () => {",
+                  "  pm.expect(body.location.latitude).to.be.a('number');",
+                  "  pm.expect(body.location.longitude).to.be.a('number');",
+                  "});",
+                  "pm.test('문 열림 / 시동 상태 값이 유효함', () => {",
+                  "  pm.expect(body.door_state).to.be.oneOf(['OPEN', 'CLOSED']);",
+                  "  pm.expect(body.power_state).to.be.oneOf(['ON', 'OFF']);",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
