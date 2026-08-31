@@ -14,16 +14,39 @@ on:
           - alpha
           - dev
       targets:
-        description: "실행할 폴더 또는 요청 이름 (쉼표로 여러 개, 비우면 전체). 예: 카셰어링,비대면"
+        description: "실행할 폴더/요청 (쉼표로 여러 개). 비우면 도메인 폴더별로 나눠서 병렬 실행."
         type: string
         required: false
         default: ""
 
 jobs:
+  # 실행 대상을 matrix 로 변환 — 비우면 도메인 폴더 전체, 있으면 입력한 항목들
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.build.outputs.matrix }}
+    steps:
+      - id: build
+        env:
+          TARGETS: ${{ inputs.targets }}
+        run: |
+          if [ -z "$TARGETS" ]; then
+            echo 'matrix={"target":["카셰어링","비대면","공통"]}' >> "$GITHUB_OUTPUT"
+          else
+            json=$(jq -cn --arg s "$TARGETS" \
+              '$s | split(",") | map(gsub("^ +| +$";"")) | map(select(length > 0))')
+            echo "matrix={\"target\":$json}" >> "$GITHUB_OUTPUT"
+          fi
+
   api-test:
+    needs: plan
     runs-on: ubuntu-latest
     # alpha/dev 는 동일 이름의 GitHub Environment 에서 시크릿/변수를 가져온다.
     environment: ${{ inputs.environment }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    name: ${{ matrix.target }}
     steps:
       - name: 체크아웃
         uses: actions/checkout@v5
@@ -45,24 +68,26 @@ jobs:
 
       - name: Newman 실행
         env:
+          ENVIRONMENT: ${{ inputs.environment }}
+          TARGET: ${{ matrix.target }}
           # local 이 아닐 때만 값이 들어옴. 없으면 스크립트가 무시한다.
           BASE_URL: ${{ inputs.environment != 'local' && vars.BASE_URL || '' }}
           ACCESS_TOKEN: ${{ inputs.environment != 'local' && secrets.ACCESS_TOKEN || '' }}
-          CAR_ID: ${{ vars.CAR_ID }}
+          VEHICLE_ID: ${{ vars.VEHICLE_ID }}
           # local 이 아니면 실제 응답/요청 본문을 리포트에서 제외 (공개 로그 유출 방지)
           REDACT_BODIES: ${{ inputs.environment != 'local' && 'true' || 'false' }}
-        run: bash scripts/run-newman.sh "${{ inputs.environment }}" "${{ inputs.targets }}"
+        run: bash scripts/run-newman.sh "$ENVIRONMENT" "$TARGET"
 
       - name: 실행 요약
         if: always()
         run: |
           {
-            echo "### API 테스트 결과"
+            echo "### ${{ matrix.target }}"
             echo ""
             echo "| 항목 | 값 |"
             echo "| --- | --- |"
             echo "| 환경 | \`${{ inputs.environment }}\` |"
-            echo "| 대상 | \`${{ inputs.targets || '전체' }}\` |"
+            echo "| 대상 | \`${{ matrix.target }}\` |"
             echo "| 실행자 | @${{ github.actor }} |"
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -70,6 +95,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v5
         with:
-          name: newman-report-${{ inputs.environment }}
+          name: newman-report-${{ inputs.environment }}-${{ strategy.job-index }}
           path: reports/
           if-no-files-found: warn

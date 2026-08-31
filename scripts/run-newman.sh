@@ -7,8 +7,8 @@
 #               예) "카셰어링"   "카셰어링,비대면"   "문 열림 상태 주입 (is_door_open=true)"
 #
 #   CI 환경변수:
-#     BASE_URL / ACCESS_TOKEN / CAR_ID  → 환경 파일 값보다 우선 주입
-#     REDACT_BODIES=true               → 리포트에서 요청/응답 본문 제외
+#     BASE_URL / ACCESS_TOKEN / VEHICLE_ID  → 환경 파일 값보다 우선 주입
+#     REDACT_BODIES=true                    → 리포트에서 요청/응답 본문 제외
 #
 set -euo pipefail
 
@@ -50,7 +50,7 @@ fi
 # CI 시크릿 오버라이드 (환경 파일의 빈 값을 실제 값으로 채움)
 [[ -n "${BASE_URL:-}" ]]     && ARGS+=(--env-var "base_url=${BASE_URL}")
 [[ -n "${ACCESS_TOKEN:-}" ]] && ARGS+=(--env-var "access_token=${ACCESS_TOKEN}")
-[[ -n "${CAR_ID:-}" ]]       && ARGS+=(--env-var "car_id=${CAR_ID}")
+[[ -n "${VEHICLE_ID:-}" ]]   && ARGS+=(--env-var "vehicle_id=${VEHICLE_ID}")
 
 echo "▶ env=${ENV_NAME} targets=${TARGETS:-<전체>}"
 npx --yes newman "${ARGS[@]}"

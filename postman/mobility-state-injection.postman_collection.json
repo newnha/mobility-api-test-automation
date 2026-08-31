@@ -1,49 +1,33 @@
 {
   "info": {
-    "name": "Mobility - 차량 상태값 주입 & 검증",
-    "description": "Swagger 명세 기반으로 도메인별 핵심 상태 변경 API(PUT /test/cars/:car_id)를 정리한 컬렉션.\nUI를 거치지 않고 Payload로 차량 상태(is_door_open, is_engine_on, remaining_percentage 등)를 직접 주입하고, 반영 여부를 검증한다.",
+    "name": "Vehicle - 차량 상태값 주입 & 검증",
+    "description": "가상 스펙(spec/openapi.yaml) 기반으로 도메인별(카셰어링, 비대면) 상태 변경 API(PUT /test-fixtures/vehicles/:vehicle_id)를 정리한 컬렉션.\nUI를 거치지 않고 Payload로 차량 상태(door_state, power_state, charge_percent 등)를 직접 주입하고, 반영 여부를 검증한다.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     { "key": "base_url", "value": "http://127.0.0.1:4010" },
     { "key": "access_token", "value": "local-mock-token" },
-    { "key": "car_id", "value": "TEST-CAR-0001" }
+    { "key": "vehicle_id", "value": "FIXTURE-0001" }
   ],
   "auth": {
     "type": "bearer",
     "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
   },
-  "event": [
-    {
-      "listen": "prerequisite",
-      "script": {
-        "type": "text/javascript",
-        "exec": [
-          "if (!pm.variables.get('car_id')) {",
-          "  pm.variables.set('car_id', 'TEST-CAR-0001');",
-          "}"
-        ]
-      }
-    }
-  ],
   "item": [
     {
       "name": "카셰어링",
       "item": [
         {
-          "name": "문 열림 상태 주입 (is_door_open=true)",
+          "name": "문 열림 상태 세팅 (door_state=OPEN)",
           "request": {
             "method": "PUT",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "url": {
-              "raw": "{{base_url}}/test/cars/{{car_id}}",
+              "raw": "{{base_url}}/test-fixtures/vehicles/{{vehicle_id}}",
               "host": ["{{base_url}}"],
-              "path": ["test", "cars", "{{car_id}}"]
+              "path": ["test-fixtures", "vehicles", "{{vehicle_id}}"]
             },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"is_door_open\": true\n}"
-            }
+            "body": { "mode": "raw", "raw": "{\n  \"door_state\": \"OPEN\"\n}" }
           },
           "event": [
             {
@@ -54,15 +38,15 @@
                   "const body = pm.response.json();",
                   "pm.test('상태코드 200', () => pm.response.to.have.status(200));",
                   "pm.test('응답 스키마 검증', () => {",
-                  "  pm.expect(body).to.have.property('car_id');",
-                  "  pm.expect(body).to.have.property('is_door_open').that.is.a('boolean');",
-                  "  pm.expect(body).to.have.property('is_engine_on').that.is.a('boolean');",
-                  "  pm.expect(body).to.have.property('is_locked').that.is.a('boolean');",
-                  "  pm.expect(body).to.have.property('remaining_percentage').that.is.a('number');",
+                  "  pm.expect(body).to.have.property('vehicle_id');",
+                  "  pm.expect(body).to.have.property('door_state').that.is.a('string');",
+                  "  pm.expect(body).to.have.property('power_state').that.is.a('string');",
+                  "  pm.expect(body).to.have.property('lock_state').that.is.a('string');",
+                  "  pm.expect(body).to.have.property('charge_percent').that.is.a('number');",
                   "  pm.expect(body).to.have.property('updated_at');",
                   "});",
-                  "pm.test('주입한 상태값이 반영됨 (is_door_open=true)', () => {",
-                  "  pm.expect(body.is_door_open).to.eql(true);",
+                  "pm.test('주입한 상태값이 반영됨 (door_state=OPEN)', () => {",
+                  "  pm.expect(body.door_state).to.eql('OPEN');",
                   "});"
                 ]
               }
@@ -70,16 +54,16 @@
           ]
         },
         {
-          "name": "시동 ON 상태 주입 (is_engine_on=true)",
+          "name": "시동 ON 상태 세팅 (power_state=ON)",
           "request": {
             "method": "PUT",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "url": {
-              "raw": "{{base_url}}/test/cars/{{car_id}}",
+              "raw": "{{base_url}}/test-fixtures/vehicles/{{vehicle_id}}",
               "host": ["{{base_url}}"],
-              "path": ["test", "cars", "{{car_id}}"]
+              "path": ["test-fixtures", "vehicles", "{{vehicle_id}}"]
             },
-            "body": { "mode": "raw", "raw": "{\n  \"is_engine_on\": true\n}" }
+            "body": { "mode": "raw", "raw": "{\n  \"power_state\": \"ON\"\n}" }
           },
           "event": [
             {
@@ -89,8 +73,8 @@
                 "exec": [
                   "const body = pm.response.json();",
                   "pm.test('상태코드 200', () => pm.response.to.have.status(200));",
-                  "pm.test('주입한 상태값이 반영됨 (is_engine_on=true)', () => {",
-                  "  pm.expect(body.is_engine_on).to.eql(true);",
+                  "pm.test('주입한 상태값이 반영됨 (power_state=ON)', () => {",
+                  "  pm.expect(body.power_state).to.eql('ON');",
                   "});"
                 ]
               }
@@ -98,16 +82,16 @@
           ]
         },
         {
-          "name": "배터리 부족 경계값 주입 (remaining_percentage=15)",
+          "name": "배터리 부족 경계값 세팅 (charge_percent=15)",
           "request": {
             "method": "PUT",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "url": {
-              "raw": "{{base_url}}/test/cars/{{car_id}}",
+              "raw": "{{base_url}}/test-fixtures/vehicles/{{vehicle_id}}",
               "host": ["{{base_url}}"],
-              "path": ["test", "cars", "{{car_id}}"]
+              "path": ["test-fixtures", "vehicles", "{{vehicle_id}}"]
             },
-            "body": { "mode": "raw", "raw": "{\n  \"remaining_percentage\": 15\n}" }
+            "body": { "mode": "raw", "raw": "{\n  \"charge_percent\": 15\n}" }
           },
           "event": [
             {
@@ -118,7 +102,7 @@
                   "const body = pm.response.json();",
                   "pm.test('상태코드 200', () => pm.response.to.have.status(200));",
                   "pm.test('경계값이 정확히 반영됨 (15)', () => {",
-                  "  pm.expect(body.remaining_percentage).to.eql(15);",
+                  "  pm.expect(body.charge_percent).to.eql(15);",
                   "});"
                 ]
               }
@@ -131,16 +115,16 @@
       "name": "비대면",
       "item": [
         {
-          "name": "원격 잠금 해제 상태 주입 (is_locked=false)",
+          "name": "원격 잠금 해제 세팅 (lock_state=UNLOCKED)",
           "request": {
             "method": "PUT",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "url": {
-              "raw": "{{base_url}}/test/cars/{{car_id}}",
+              "raw": "{{base_url}}/test-fixtures/vehicles/{{vehicle_id}}",
               "host": ["{{base_url}}"],
-              "path": ["test", "cars", "{{car_id}}"]
+              "path": ["test-fixtures", "vehicles", "{{vehicle_id}}"]
             },
-            "body": { "mode": "raw", "raw": "{\n  \"is_locked\": false\n}" }
+            "body": { "mode": "raw", "raw": "{\n  \"lock_state\": \"UNLOCKED\"\n}" }
           },
           "event": [
             {
@@ -150,8 +134,8 @@
                 "exec": [
                   "const body = pm.response.json();",
                   "pm.test('상태코드 200', () => pm.response.to.have.status(200));",
-                  "pm.test('주입한 상태값이 반영됨 (is_locked=false)', () => {",
-                  "  pm.expect(body.is_locked).to.eql(false);",
+                  "pm.test('주입한 상태값이 반영됨 (lock_state=UNLOCKED)', () => {",
+                  "  pm.expect(body.lock_state).to.eql('UNLOCKED');",
                   "});"
                 ]
               }
@@ -159,16 +143,16 @@
           ]
         },
         {
-          "name": "유효하지 않은 배터리 값 거부 검증 (remaining_percentage=150)",
+          "name": "유효하지 않은 배터리 값 거부 (charge_percent=150)",
           "request": {
             "method": "PUT",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "url": {
-              "raw": "{{base_url}}/test/cars/{{car_id}}",
+              "raw": "{{base_url}}/test-fixtures/vehicles/{{vehicle_id}}",
               "host": ["{{base_url}}"],
-              "path": ["test", "cars", "{{car_id}}"]
+              "path": ["test-fixtures", "vehicles", "{{vehicle_id}}"]
             },
-            "body": { "mode": "raw", "raw": "{\n  \"remaining_percentage\": 150\n}" }
+            "body": { "mode": "raw", "raw": "{\n  \"charge_percent\": 150\n}" }
           },
           "event": [
             {
@@ -193,9 +177,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/test/cars/{{car_id}}",
+              "raw": "{{base_url}}/test-fixtures/vehicles/{{vehicle_id}}",
               "host": ["{{base_url}}"],
-              "path": ["test", "cars", "{{car_id}}"]
+              "path": ["test-fixtures", "vehicles", "{{vehicle_id}}"]
             }
           },
           "event": [
@@ -207,11 +191,11 @@
                   "const body = pm.response.json();",
                   "pm.test('상태코드 200', () => pm.response.to.have.status(200));",
                   "pm.test('필수 필드가 모두 존재', () => {",
-                  "  ['car_id','is_door_open','is_engine_on','is_locked','remaining_percentage','updated_at']",
+                  "  ['vehicle_id','door_state','power_state','lock_state','charge_percent','updated_at']",
                   "    .forEach((k) => pm.expect(body).to.have.property(k));",
                   "});",
-                  "pm.test('car_id가 요청한 차량과 일치', () => {",
-                  "  pm.expect(body.car_id).to.eql(pm.variables.get('car_id'));",
+                  "pm.test('vehicle_id가 요청한 차량과 일치', () => {",
+                  "  pm.expect(body.vehicle_id).to.eql(pm.variables.get('vehicle_id'));",
                   "});"
                 ]
               }

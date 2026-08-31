@@ -1,114 +1,119 @@
 openapi: 3.0.3
 info:
-  title: Mobility Test-Support API (sanitized)
+  title: Vehicle Test-Fixture API (가상 스펙)
   version: 1.0.0
   description: >
-    실무에서 사용한 사내 Swagger 명세 중, 테스트 조건 세팅에 사용하는
-    "차량 상태 주입" 엔드포인트만 발췌하여 값/도메인을 익명화한 버전입니다.
-    실제 운영 API 스펙 및 인증 정보는 포함되어 있지 않습니다.
+    테스트 조건 세팅에 사용하는 "차량 상태 주입" 엔드포인트를 데모용으로 재구성한
+    가상 스펙입니다. 필드명·경로·값은 실제 사내 API 와 무관하게 새로 정의했습니다.
 servers:
   - url: http://127.0.0.1:4010
     description: local mock
-  - url: https://api-alpha.example-mobility.internal
+  - url: https://vehicle-fixtures.alpha.example.test
     description: alpha
-  - url: https://api-dev.example-mobility.internal
+  - url: https://vehicle-fixtures.dev.example.test
     description: dev
 paths:
-  /test/cars/{car_id}:
+  /test-fixtures/vehicles/{vehicle_id}:
     get:
       summary: 차량 상태 조회
-      operationId: getCarState
+      operationId: getVehicleState
       parameters:
-        - $ref: '#/components/parameters/CarId'
+        - $ref: '#/components/parameters/VehicleId'
       responses:
         '200':
           description: 현재 차량 상태
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CarState'
+                $ref: '#/components/schemas/VehicleState'
     put:
       summary: 차량 상태값 주입 (테스트 조건 세팅)
-      operationId: injectCarState
+      operationId: injectVehicleState
       description: >
-        UI 조작 없이 요청 Payload로 차량 상태를 직접 변경한다.
+        UI 조작 없이 요청 Payload 로 차량 상태를 직접 변경한다.
         전달한 필드만 부분 갱신(partial update)된다.
       security:
         - bearerAuth: []
       parameters:
-        - $ref: '#/components/parameters/CarId'
+        - $ref: '#/components/parameters/VehicleId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CarStateInput'
+              $ref: '#/components/schemas/VehicleStateInput'
             examples:
               문열림:
-                value: { is_door_open: true }
+                value: { door_state: OPEN }
               시동ON:
-                value: { is_engine_on: true }
+                value: { power_state: ON }
               배터리경계값:
-                value: { remaining_percentage: 15 }
+                value: { charge_percent: 15 }
       responses:
         '200':
           description: 갱신된 차량 상태
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CarState'
+                $ref: '#/components/schemas/VehicleState'
         '401':
           description: 인증 실패
         '422':
           description: 유효하지 않은 상태값
 components:
   parameters:
-    CarId:
-      name: car_id
+    VehicleId:
+      name: vehicle_id
       in: path
       required: true
       schema:
         type: string
-      example: TEST-CAR-0001
+      example: FIXTURE-0001
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
   schemas:
-    CarStateInput:
+    VehicleStateInput:
       type: object
       minProperties: 1
       additionalProperties: false
       properties:
-        is_door_open:
-          type: boolean
-        is_engine_on:
-          type: boolean
-        is_locked:
-          type: boolean
-        remaining_percentage:
+        door_state:
+          type: string
+          enum: [OPEN, CLOSED]
+        power_state:
+          type: string
+          enum: [ON, OFF]
+        lock_state:
+          type: string
+          enum: [LOCKED, UNLOCKED]
+        charge_percent:
           type: number
           minimum: 0
           maximum: 100
-    CarState:
+    VehicleState:
       type: object
       required:
-        - car_id
-        - is_door_open
-        - is_engine_on
-        - is_locked
-        - remaining_percentage
+        - vehicle_id
+        - door_state
+        - power_state
+        - lock_state
+        - charge_percent
         - updated_at
       properties:
-        car_id:
+        vehicle_id:
           type: string
-        is_door_open:
-          type: boolean
-        is_engine_on:
-          type: boolean
-        is_locked:
-          type: boolean
-        remaining_percentage:
+        door_state:
+          type: string
+          enum: [OPEN, CLOSED]
+        power_state:
+          type: string
+          enum: [ON, OFF]
+        lock_state:
+          type: string
+          enum: [LOCKED, UNLOCKED]
+        charge_percent:
           type: number
         updated_at:
           type: string
