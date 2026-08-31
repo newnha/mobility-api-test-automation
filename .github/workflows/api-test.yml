@@ -30,10 +30,10 @@ jobs:
     environment: ${{ inputs.environment }}
     steps:
       - name: 체크아웃
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Node 설정
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "22"
           cache: npm
@@ -70,7 +70,7 @@ jobs:
 
       - name: 리포트 업로드
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: newman-report-${{ inputs.environment }}-${{ inputs.domain }}
           path: reports/
