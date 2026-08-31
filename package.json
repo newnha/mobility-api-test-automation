@@ -1,0 +1,21 @@
+{
+  "name": "mobility-api-test-automation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "모빌리티 차량 상태값 주입 및 API 테스트 자동화 (Postman + Newman + GitHub Actions)",
+  "scripts": {
+    "mock": "node mock/server.js",
+    "wait": "wait-on -t 30000 http://127.0.0.1:4010/health",
+    "test": "bash scripts/run-newman.sh local all",
+    "test:carsharing": "bash scripts/run-newman.sh local carsharing",
+    "test:contactless": "bash scripts/run-newman.sh local contactless",
+    "test:alpha": "bash scripts/run-newman.sh alpha all",
+    "test:dev": "bash scripts/run-newman.sh dev all"
+  },
+  "devDependencies": {
+    "express": "^4.19.2",
+    "newman": "^6.2.1",
+    "newman-reporter-htmlextra": "^1.23.1",
+    "wait-on": "^7.2.0"
+  }
+}

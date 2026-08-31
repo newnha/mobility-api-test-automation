@@ -1,0 +1,115 @@
+openapi: 3.0.3
+info:
+  title: Mobility Test-Support API (sanitized)
+  version: 1.0.0
+  description: >
+    실무에서 사용한 사내 Swagger 명세 중, 테스트 조건 세팅에 사용하는
+    "차량 상태 주입" 엔드포인트만 발췌하여 값/도메인을 익명화한 버전입니다.
+    실제 운영 API 스펙 및 인증 정보는 포함되어 있지 않습니다.
+servers:
+  - url: http://127.0.0.1:4010
+    description: local mock
+  - url: https://api-alpha.example-mobility.internal
+    description: alpha
+  - url: https://api-dev.example-mobility.internal
+    description: dev
+paths:
+  /test/cars/{car_id}:
+    get:
+      summary: 차량 상태 조회
+      operationId: getCarState
+      parameters:
+        - $ref: '#/components/parameters/CarId'
+      responses:
+        '200':
+          description: 현재 차량 상태
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CarState'
+    put:
+      summary: 차량 상태값 주입 (테스트 조건 세팅)
+      operationId: injectCarState
+      description: >
+        UI 조작 없이 요청 Payload로 차량 상태를 직접 변경한다.
+        전달한 필드만 부분 갱신(partial update)된다.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CarId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CarStateInput'
+            examples:
+              문열림:
+                value: { is_door_open: true }
+              시동ON:
+                value: { is_engine_on: true }
+              배터리경계값:
+                value: { remaining_percentage: 15 }
+      responses:
+        '200':
+          description: 갱신된 차량 상태
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CarState'
+        '401':
+          description: 인증 실패
+        '422':
+          description: 유효하지 않은 상태값
+components:
+  parameters:
+    CarId:
+      name: car_id
+      in: path
+      required: true
+      schema:
+        type: string
+      example: TEST-CAR-0001
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    CarStateInput:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        is_door_open:
+          type: boolean
+        is_engine_on:
+          type: boolean
+        is_locked:
+          type: boolean
+        remaining_percentage:
+          type: number
+          minimum: 0
+          maximum: 100
+    CarState:
+      type: object
+      required:
+        - car_id
+        - is_door_open
+        - is_engine_on
+        - is_locked
+        - remaining_percentage
+        - updated_at
+      properties:
+        car_id:
+          type: string
+        is_door_open:
+          type: boolean
+        is_engine_on:
+          type: boolean
+        is_locked:
+          type: boolean
+        remaining_percentage:
+          type: number
+        updated_at:
+          type: string
+          format: date-time

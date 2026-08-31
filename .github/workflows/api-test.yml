@@ -1,0 +1,77 @@
+name: API 상태값 주입 테스트
+
+# 수동 실행 전용: Actions 탭 > "API 상태값 주입 테스트" > Run workflow
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "테스트 실행 환경"
+        type: choice
+        required: true
+        default: local
+        options:
+          - local   # 레포에 포함된 목(mock) 서버 대상 — 시크릿 불필요
+          - alpha
+          - dev
+      domain:
+        description: "테스트 도메인"
+        type: choice
+        required: true
+        default: all
+        options:
+          - all
+          - carsharing
+          - contactless
+
+jobs:
+  api-test:
+    runs-on: ubuntu-latest
+    # alpha/dev 는 동일 이름의 GitHub Environment 에서 시크릿/변수를 가져온다.
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Node 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: 의존성 설치
+        run: npm ci
+
+      - name: 목 서버 기동 (local 환경만)
+        if: ${{ inputs.environment == 'local' }}
+        run: |
+          npm run mock &
+          npx --yes wait-on -t 30000 http://127.0.0.1:4010/health
+
+      - name: Newman 실행
+        env:
+          # local 이 아닐 때만 값이 들어옴. 없으면 스크립트가 무시한다.
+          BASE_URL: ${{ inputs.environment != 'local' && vars.BASE_URL || '' }}
+          ACCESS_TOKEN: ${{ inputs.environment != 'local' && secrets.ACCESS_TOKEN || '' }}
+          CAR_ID: ${{ vars.CAR_ID }}
+        run: bash scripts/run-newman.sh "${{ inputs.environment }}" "${{ inputs.domain }}"
+
+      - name: 실행 요약
+        if: always()
+        run: |
+          {
+            echo "### API 테스트 결과"
+            echo ""
+            echo "| 항목 | 값 |"
+            echo "| --- | --- |"
+            echo "| 환경 | \`${{ inputs.environment }}\` |"
+            echo "| 도메인 | \`${{ inputs.domain }}\` |"
+            echo "| 실행자 | @${{ github.actor }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 리포트 업로드
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: newman-report-${{ inputs.environment }}-${{ inputs.domain }}
+          path: reports/
+          if-no-files-found: warn
