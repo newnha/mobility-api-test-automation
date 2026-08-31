@@ -6,11 +6,11 @@
   "scripts": {
     "mock": "node mock/server.js",
     "wait": "wait-on -t 30000 http://127.0.0.1:4010/health",
-    "test": "bash scripts/run-newman.sh local all",
-    "test:carsharing": "bash scripts/run-newman.sh local carsharing",
-    "test:contactless": "bash scripts/run-newman.sh local contactless",
-    "test:alpha": "bash scripts/run-newman.sh alpha all",
-    "test:dev": "bash scripts/run-newman.sh dev all"
+    "test": "bash scripts/run-newman.sh local",
+    "test:carsharing": "bash scripts/run-newman.sh local 카셰어링",
+    "test:contactless": "bash scripts/run-newman.sh local 비대면",
+    "test:alpha": "bash scripts/run-newman.sh alpha",
+    "test:dev": "bash scripts/run-newman.sh dev"
   },
   "devDependencies": {
     "express": "^4.19.2",

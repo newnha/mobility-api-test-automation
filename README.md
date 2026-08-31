@@ -80,7 +80,14 @@ npm run test:contactless
 1. 레포 **Actions** 탭 → **"API 상태값 주입 테스트"** → **Run workflow**
 2. 입력값 선택
    - `environment`: `local`(목 서버, 시크릿 불필요) / `alpha` / `dev`
-   - `domain`: `all` / `carsharing` / `contactless`
+   - `targets`: 실행할 **폴더 또는 요청 이름**을 쉼표로 나열 (비우면 전체).
+     포스트맨에서 폴더/요청 골라 Send 하는 것과 동일하게 동작한다.
+     - `카셰어링` — 카셰어링 폴더 전체
+     - `카셰어링,비대면` — 두 폴더
+     - `문 열림 상태 주입 (is_door_open=true)` — 특정 요청 하나만
+
+> `environment` 가 `local` 이 아니면 리포트에서 요청/응답 본문을 자동 제외한다
+> (공개 Actions 로그·아티팩트로 실데이터가 새지 않도록).
 
 ### alpha / dev 로 실제 서버를 대상으로 하려면
 
